@@ -1,0 +1,59 @@
+{
+  "openapi_spec": {
+    "openapi": "3.0.3",
+    "info": { "title": "Sample Pet API", "version": "1.0.0" },
+    "paths": {
+      "/pets/{petId}": {
+        "get": {
+          "summary": "Get pet by id",
+          "parameters": [
+            {
+              "name": "petId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "integer" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Pet found",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/Pet" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Pet": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "name", "status"],
+          "properties": {
+            "id": { "type": "integer", "format": "int64" },
+            "name": { "type": "string", "minLength": 1 },
+            "status": {
+              "type": "string",
+              "enum": ["available", "pending", "sold"]
+            },
+            "tag": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "path": "/pets/1",
+  "method": "get",
+  "status_code": "200",
+  "response_body": {
+    "id": "not-a-number",
+    "name": "Buddy",
+    "status": "maybe",
+    "extraField": true
+  },
+  "include_schema_in_prompt": true
+}
