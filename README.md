@@ -140,29 +140,6 @@ ai-api-validation-engine/
     └── sample_response_bad.json
 ```
 
-## Deployment
-
-### Render
-
-1. Push this folder to a Git repository.
-2. In Render: **New → Web Service**, connect the repo.
-3. **Runtime:** Docker (use the included `Dockerfile`) *or* Native:
-   - **Build:** `pip install -r requirements.txt`
-   - **Start:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Add environment variable **`OPENAI_API_KEY`** (and optional `OPENAI_MODEL`).
-5. Deploy; use the generated **`https://<service>.onrender.com`** URL. **`GET /health`** confirms the service is up; **`POST /validate`** is your public endpoint.
-
-### AWS (high level)
-
-- **ECS Fargate** + **Application Load Balancer**: build and push the Docker image to **ECR**, define task with port **8000**, set secrets in **SSM/Secrets Manager** for `OPENAI_API_KEY`, target group health check on **`/health`**.
-- **Lambda + API Gateway** is possible with **Mangum** or container images; this repo is optimized for long-lived **uvicorn** processes.
-
-## Security
-
-- Do not commit **`.env`** or real API keys.
-- In production, restrict **CORS** (`main.py`) to your frontend origin instead of `*`.
-- Treat uploaded OpenAPI specs and response bodies as **sensitive** if they contain secrets; log only previews (this app already truncates schema in logs).
-
 ## License
 
 MIT (adjust as needed for your organization).
