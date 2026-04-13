@@ -306,6 +306,11 @@ Existing endpoints **`POST /validate`**, **`GET /health`**, **`POST /validate/ba
 $tc = Get-Content -Raw samples/test_cases/httpbin_json_get.json
 Invoke-RestMethod -Uri http://127.0.0.1:8000/run-test -Method POST -Body $tc -ContentType "application/json"
 ```
+<<<<<<< HEAD
+=======
+
+---
+>>>>>>> 43e5b0c (updated)
 
 ---
 
@@ -327,6 +332,44 @@ The image runs `uvicorn app.main:app` on port **8000** (or `PORT` if set).
 - Inject **`OPENAI_API_KEY`** via secret manager.
 
 ---
+<<<<<<< HEAD
+=======
+
+## Security checklist
+
+| Topic | What this project does |
+|-------|-------------------------|
+| **API keys** | Loaded from environment / `.env` via Pydantic Settings; never logged in full |
+| **`.env`** | Listed in `.gitignore`; use `.env.example` as a template only |
+| **Input validation** | Strict Pydantic models; 422 with structured `{ "error", "details" }` for bad bodies |
+| **Prompt injection** | System prompt states SCHEMA/RESPONSE blocks are untrusted data; model instructed to ignore embedded “instructions” in JSON strings |
+| **CORS** | Default `*` for dev; set **`CORS_ORIGINS`** to explicit origins in production |
+| **Rate limiting** | Per-IP limit via SlowAPI (tune `RATE_LIMIT_PER_MINUTE`) |
+| **Error leakage** | Unhandled exceptions return generic message unless `LOG_LEVEL=DEBUG` |
+| **Sensitive payloads** | Treat OpenAPI specs and bodies as sensitive; logs use short schema previews where applicable |
+| **Outbound HTTP from server** | `POST /run-test` issues real requests from the server process; restrict exposure (auth, network policy) in production |
+
+---
+
+## Bonus: simple UI suggestion
+
+For internal tools, a minimal **static page** (or **Streamlit** / **Gradio**) with:
+
+- File upload for OpenAPI JSON
+- Text areas for path, method, status, and response JSON
+- POST to `/validate` and render the result as tables for each issue list
+
+Alternatively, use the built-in **Swagger UI** at `/docs` for quick manual calls.
+
+---
+
+## Screenshots (placeholders)
+
+- **[Screenshot 1]** — Swagger UI at `http://127.0.0.1:8000/docs` showing `POST /validate`.
+- **[Screenshot 2]** — Example `ValidationResult` with `validation_source: "hybrid"` after enabling the LLM pass.
+
+---
+>>>>>>> 43e5b0c (updated)
 
 ## Security checklist
 
