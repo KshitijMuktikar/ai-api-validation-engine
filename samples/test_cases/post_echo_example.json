@@ -1,0 +1,12 @@
+{
+  "name": "Httpbin POST echo",
+  "method": "POST",
+  "url": "https://httpbin.org/post",
+  "headers": { "Content-Type": "application/json" },
+  "body": { "hello": "world", "n": 1 },
+  "expected_swagger": "httpbin_post.json",
+  "enable_ai_validation": false,
+  "openapi_path": "/post",
+  "openapi_method": "post",
+  "expected_http_status": 200
+}

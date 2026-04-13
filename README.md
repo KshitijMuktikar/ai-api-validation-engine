@@ -15,10 +15,10 @@ Results can be **cached** in memory (TTL + max size), **rate-limited** per IP, a
 ```
                     ┌─────────────────────────────────────────┐
   HTTP Client       │  FastAPI (app.main)                      │
-        │           │  ├─ SlowAPI middleware (rate limit)    │
-        ▼           │  ├─ CORS (configurable origins)        │
-POST /validate,     │  ├─ Global exception → {error,details}  │
-   /run-test         │  └─ Routers (+ /run-tests, /test-history)│
+        │           │  ├─ SlowAPI middleware (rate limit)      │
+        ▼           │  ├─ CORS (configurable origins)          │
+POST /validate,     │  ├─ Global exception → {error,details}   │
+   /run-test        │  └─ Routers (+ /run-tests, /test-history)│
         │           └─────────────────────────────────────────┘
         │                          │
         │                          ▼
@@ -29,18 +29,18 @@ POST /validate,     │  ├─ Global exception → {error,details}  │
         │                          │
         │                          ▼
         │           ┌─────────────────────────────────────────┐
-        │           │  OpenAPI loader (inline or async URL)      │
+        │           │  OpenAPI loader (inline or async URL)    │
         │           │  + swagger_parser ($ref, path templates) │
         │           └─────────────────────────────────────────┘
         │                          │
         │                          ▼
         │           ┌─────────────────────────────────────────┐
         │           │  Hybrid validation (+ optional HTTP client) │
-        │           │  1) api_client (requests + retries)         │
-        │           │  2) rule_validator (jsonschema)            │
-        │           │  3) optional llm_validator (AsyncOpenAI)   │
-        │           │  4) merge + confidence + validation_source  │
-        │           │  5) TTL cache (sha256 of inputs)           │
+        │           │  1) api_client (requests + retries)      │
+        │           │  2) rule_validator (jsonschema)           │
+        │           │  3) optional llm_validator (AsyncOpenAI) │
+        │           │  4) merge + confidence + validation_source│
+        │           │  5) TTL cache (sha256 of inputs)         │
         │           └─────────────────────────────────────────┘
         │                          │
         └──────────────────────────┴──► JSON ValidationResult
@@ -309,7 +309,6 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/run-test -Method POST -Body $tc -Co
 
 ---
 
-<<<<<<< HEAD
 ## Deployment
 
 ### Docker
@@ -336,7 +335,7 @@ The image runs `uvicorn app.main:app` on port **8000** (or `PORT` if set).
 | **API keys** | Loaded from environment / `.env` via Pydantic Settings; never logged in full |
 | **`.env`** | Listed in `.gitignore`; use `.env.example` as a template only |
 | **Input validation** | Strict Pydantic models; 422 with structured `{ "error", "details" }` for bad bodies |
-| **Prompt injection** | System prompt states SCHEMA/RESPONSE blocks are untrusted data; model instructed to ignore embedded “instructions” in JSON strings |
+| **Prompt injection** | System prompt states SCHEMA/RESPONSE blocks are untrusted data; model instructed to ignore embedded "instructions" in JSON strings |
 | **CORS** | Default `*` for dev; set **`CORS_ORIGINS`** to explicit origins in production |
 | **Rate limiting** | Per-IP limit via SlowAPI (tune `RATE_LIMIT_PER_MINUTE`) |
 | **Error leakage** | Unhandled exceptions return generic message unless `LOG_LEVEL=DEBUG` |
@@ -364,8 +363,6 @@ Alternatively, use the built-in **Swagger UI** at `/docs` for quick manual calls
 
 ---
 
-=======
->>>>>>> 15cb08f111305397217fbd4ab1bebdb91e676c98
 ## License
 
 MIT (adjust as needed for your organization).

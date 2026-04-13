@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 from typing import Any, Optional
 
-from logging_config import get_logger
+from app.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -22,10 +22,7 @@ def _deref(
     node: Any,
     seen: Optional[set[str]] = None,
 ) -> Any:
-    """
-    Resolve internal JSON Pointers (#/...) in-place style without mutating original keys
-    beyond returning new structures for resolved refs.
-    """
+    """Resolve internal JSON Pointers (#/...) without mutating unrelated keys."""
     if seen is None:
         seen = set()
 
@@ -72,15 +69,11 @@ def normalize_path(path: str) -> str:
 
 
 def _find_path_item(paths: dict[str, Any], path: str) -> tuple[str, dict[str, Any]]:
-    """
-    Match request path to OpenAPI paths object; supports literal match first,
-    then template match (e.g. /pets/{petId}).
-    """
+    """Match request path to OpenAPI paths (literal then template, e.g. /pets/{petId})."""
     norm = normalize_path(path)
     if norm in paths:
         return norm, paths[norm]
 
-    # Template matching: /pets/{petId} matches /pets/123
     for spec_path, item in paths.items():
         if not isinstance(item, dict):
             continue
@@ -111,7 +104,7 @@ def get_response_json_schema(
     """
     Extract the JSON Schema for the response body (application/json preferred).
 
-    Returns a resolved schema dict suitable for LLM and documentation.
+    Returns a resolved schema dict suitable for validators and LLM context.
     """
     if "openapi" not in openapi_root and "swagger" in openapi_root:
         raise OpenAPIParseError(
@@ -127,7 +120,8 @@ def get_response_json_schema(
     op_key = method.lower()
     if op_key not in path_item:
         raise OpenAPIParseError(
-            f"Method '{method}' not defined for path. Available: {[k for k in path_item if k in ('get','put','post','delete','patch','options','head','trace')]}"
+            f"Method '{method}' not defined for path. Available: "
+            f"{[k for k in path_item if k in ('get','put','post','delete','patch','options','head','trace')]}"
         )
 
     operation = path_item[op_key]
@@ -149,11 +143,9 @@ def get_response_json_schema(
 
     content = resp.get("content")
     if not isinstance(content, dict):
-        # OAS might omit body (204); return empty schema meaning "no body expected"
-        logger.info("No response content for %s %s %s — empty body schema.", method, path, code_key)
+        logger.info("No response content for %s %s %s — null body schema.", method, path, code_key)
         return {"type": "null", "description": "No response body defined for this status."}
 
-    # Prefer application/json; fall back to first JSON-like
     media = None
     for mt in ("application/json", "application/problem+json", "application/*+json"):
         if mt in content:
@@ -180,7 +172,7 @@ def get_response_json_schema(
 
 
 def summarize_schema(schema: dict[str, Any], max_depth: int = 6) -> str:
-    """Produce a compact text summary for logs (not for LLM — full schema is passed separately)."""
+    """Compact text summary for logs (not for LLM — full schema is passed separately)."""
     import json
 
     try:

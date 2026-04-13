@@ -1,0 +1,12 @@
+{
+  "name": "Httpbin JSON GET",
+  "method": "GET",
+  "url": "https://httpbin.org/json",
+  "headers": {},
+  "body": null,
+  "expected_swagger": "httpbin_get_json.json",
+  "enable_ai_validation": false,
+  "skip_llm_on_structural_failure": true,
+  "openapi_path": "/json",
+  "openapi_method": "get"
+}

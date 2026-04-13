@@ -1,0 +1,13 @@
+{
+  "name": "Relative URL (requires TEST_ENV_BASE_URLS_JSON)",
+  "method": "GET",
+  "url": "/pets/1",
+  "headers": {},
+  "body": null,
+  "environment": "dev",
+  "expected_swagger": "openapi_pet.json",
+  "enable_ai_validation": false,
+  "openapi_path": "/pets/1",
+  "openapi_method": "get",
+  "expected_http_status": 200
+}

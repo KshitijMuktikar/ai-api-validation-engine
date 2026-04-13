@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Test Runner</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e7eef7;
+      --muted: #8b9bb4;
+      --accent: #3d8bfd;
+      --pass: #3ecf8e;
+      --fail: #f87171;
+      --border: #2d3a4f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      line-height: 1.5;
+    }
+    header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    h1 { font-size: 1.25rem; margin: 0; font-weight: 600; }
+    p.sub { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.9rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem; }
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+    }
+    .row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .badge.pass { background: rgba(62, 207, 142, 0.15); color: var(--pass); }
+    .badge.fail { background: rgba(248, 113, 113, 0.15); color: var(--fail); }
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow: auto;
+      font-size: 0.8rem;
+      max-height: 480px;
+    }
+    .issues { margin-top: 0.75rem; }
+    .issues h3 { font-size: 0.9rem; color: var(--muted); margin: 0.75rem 0 0.35rem; }
+    ul { margin: 0; padding-left: 1.2rem; color: var(--text); }
+    .err { color: var(--fail); font-size: 0.9rem; margin-top: 0.75rem; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI API Validation Engine — Test Runner</h1>
+    <p class="sub">
+      Posts JSON to <code>/run-test</code>. OpenAPI files live in <code>specs/</code> (see <code>expected_swagger</code>).
+      <a href="/docs">OpenAPI docs</a>
+    </p>
+  </header>
+  <main>
+    <label for="payload">Test case JSON (APITestCase)</label>
+    <textarea id="payload" spellcheck="false"></textarea>
+    <div class="row">
+      <button type="button" id="run">Run test</button>
+      <button type="button" id="sample" class="secondary">Load httpbin sample</button>
+      <span id="status"></span>
+    </div>
+    <div id="summary" style="margin-top:1.25rem;"></div>
+    <div id="issues"></div>
+    <h3 style="margin-top:1.25rem;font-size:0.9rem;color:var(--muted);">Raw response</h3>
+    <pre id="out">{}</pre>
+  </main>
+  <script>
+    const defaultSample = {
+      name: "Httpbin JSON GET",
+      method: "GET",
+      url: "https://httpbin.org/json",
+      headers: {},
+      body: null,
+      expected_swagger: "httpbin_get_json.json",
+      enable_ai_validation: false,
+      skip_llm_on_structural_failure: true,
+      openapi_path: "/json",
+      openapi_method: "get"
+    };
+
+    const payloadEl = document.getElementById("payload");
+    const outEl = document.getElementById("out");
+    const statusEl = document.getElementById("status");
+    const summaryEl = document.getElementById("summary");
+    const issuesEl = document.getElementById("issues");
+    payloadEl.value = JSON.stringify(defaultSample, null, 2);
+
+    document.getElementById("sample").addEventListener("click", () => {
+      payloadEl.value = JSON.stringify(defaultSample, null, 2);
+    });
+
+    function renderIssues(v) {
+      if (!v) {
+        issuesEl.innerHTML = "";
+        return;
+      }
+      const sections = [
+        ["missing_fields", "Missing fields"],
+        ["type_mismatches", "Type mismatches"],
+        ["unexpected_fields", "Unexpected fields"],
+        ["value_issues", "Value / semantic issues"]
+      ];
+      let html = '<div class="issues">';
+      for (const [key, title] of sections) {
+        const arr = v[key] || [];
+        if (!arr.length) continue;
+        html += `<h3>${title}</h3><ul>` + arr.map((x) => `<li>${escapeHtml(String(x))}</li>`).join("") + "</ul>";
+      }
+      html += "</div>";
+      issuesEl.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    document.getElementById("run").addEventListener("click", async () => {
+      const btn = document.getElementById("run");
+      btn.disabled = true;
+      statusEl.textContent = "";
+      summaryEl.innerHTML = "";
+      issuesEl.innerHTML = "";
+      outEl.textContent = "";
+      let body;
+      try {
+        body = JSON.parse(payloadEl.value);
+      } catch (e) {
+        statusEl.innerHTML = '<span class="err">Invalid JSON in editor.</span>';
+        btn.disabled = false;
+        return;
+      }
+      try {
+        const res = await fetch("/run-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        outEl.textContent = JSON.stringify(data, null, 2);
+        if (!res.ok) {
+          statusEl.innerHTML = '<span class="err">HTTP ' + res.status + "</span>";
+          btn.disabled = false;
+          return;
+        }
+        const pass = data.status === "PASS";
+        statusEl.innerHTML = pass
+          ? '<span class="badge pass">PASS</span>'
+          : '<span class="badge fail">FAIL</span>';
+        const v = data.validation;
+        const ms = data.response_time_ms;
+        const http = data.http_status;
+        summaryEl.innerHTML =
+          "<p><strong>" + escapeHtml(data.test_name) + "</strong> — " +
+          (http != null ? "HTTP " + http + " — " : "") +
+          (ms != null ? ms + " ms" : "") +
+          (v && v.validation_source ? " — source: " + escapeHtml(v.validation_source) : "") +
+          "</p>";
+        if (data.error) {
+          summaryEl.innerHTML += '<p class="err">' + escapeHtml(data.error) + "</p>";
+        }
+        renderIssues(v);
+      } catch (e) {
+        statusEl.innerHTML = '<span class="err">Request failed: ' + escapeHtml(String(e)) + "</span>";
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

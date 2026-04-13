@@ -1,0 +1,23 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Httpbin /json", "version": "1.0.0" },
+  "paths": {
+    "/json": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
