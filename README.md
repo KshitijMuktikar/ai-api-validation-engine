@@ -343,26 +343,3 @@ The image runs `uvicorn app.main:app` on port **8000** (or `PORT` if set).
 | **Outbound HTTP from server** | `POST /run-test` issues real requests from the server process; restrict exposure (auth, network policy) in production |
 
 ---
-
-## Bonus: simple UI suggestion
-
-For internal tools, a minimal **static page** (or **Streamlit** / **Gradio**) with:
-
-- File upload for OpenAPI JSON
-- Text areas for path, method, status, and response JSON
-- POST to `/validate` and render the result as tables for each issue list
-
-Alternatively, use the built-in **Swagger UI** at `/docs` for quick manual calls.
-
----
-
-## Screenshots (placeholders)
-
-- **[Screenshot 1]** — Swagger UI at `http://127.0.0.1:8000/docs` showing `POST /validate`.
-- **[Screenshot 2]** — Example `ValidationResult` with `validation_source: "hybrid"` after enabling the LLM pass.
-
----
-
-## License
-
-MIT (adjust as needed for your organization).
